@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+  app:
+    build:
+      context: ./app
+      args:
+        - http_proxy
+        - https_proxy
+    volumes:
+      - ./app:/usr/src/app
+    environment:
+      DBSTRING: "host=db user=app password=app sslmode=disable"
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: app
+      POSTGRES_USER: app
