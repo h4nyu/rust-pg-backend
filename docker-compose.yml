@@ -9,6 +9,7 @@ services:
         - https_proxy
     volumes:
       - ./app:/srv
+    command: cargo run
     environment:
       DBSTRING: "host=db user=app password=app sslmode=disable"
     ports:
