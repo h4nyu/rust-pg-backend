@@ -1,5 +1,7 @@
 # rust-pg-backend
 
 # application
-rust + warp
 
+* DDD
+* Database Connection Pool
+* Custom Error Message
