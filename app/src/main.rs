@@ -2,8 +2,8 @@ use warp::Filter;
 
 #[tokio::main]
 async fn main() {
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = warp::path!("hello" / String)
+    // GET /{String} => 200 OK with body "Hello, {String}!"
+    let hello = warp::path!(String)
         .map(|name| format!("Hello, {}!", name));
 
     warp::serve(hello)
