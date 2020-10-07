@@ -3,10 +3,16 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("error getting connection from DB pool: {0}")]
-    DBPoolError(mobc::Error<tokio_postgres::Error>),
-    #[error("error executing DB query: {0}")]
-    DBQueryError(#[from] tokio_postgres::Error),
-    #[error("error reading file: {0}")]
+    #[error(transparent)]
+    DBPoolError(#[from] mobc::Error<tokio_postgres::Error>),
+
+    #[error(transparent)]
+    DBMobcError(#[from] mobc_postgres::tokio_postgres::Error),
+
+    // #[error(transparent)]
+    // MobcError(#[from] mobc::Error<mobc_postgres::tokio_postgres::Error>),
+    // #[error("error executing DB query: {0}")]
+    // DBQueryError(#[from] tokio_postgres::Error),
+    #[error(transparent)]
     ReadFileError(#[from] std::io::Error),
 }
