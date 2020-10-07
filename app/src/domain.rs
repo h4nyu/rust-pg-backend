@@ -7,7 +7,12 @@ use std::future::Future;
 
 #[async_trait]
 pub trait FetchUser<K> {
-    async fn fetch_user(&mut self, key: K) -> Result<Option<User>, Error>;
+    async fn fetch_user(&self, key: K) -> Result<Option<User>, Error>;
+}
+
+#[async_trait]
+pub trait Upsert<V> {
+    async fn fetch_user(&mut self, row: K) -> Result<Option<User>, Error>;
 }
 
 #[async_trait]
@@ -15,17 +20,21 @@ pub trait Commit {
     async fn commit(&mut self) -> Result<(), Error>;
 }
 
-// pub trait Store {
-//     fn commit(&mut self) -> Result<(), Error>;
-//     fn fetch_user<T>(&self, key:&T) -> Result<Option<User>, Error>;
-//     fn save_user<T>(&mut self, row:&User) -> Result<(), Error>;
-// }
+
 
 pub mod user {
     #[derive(Serialize, Deserialize)]
-    pub struct CreatePayload {}
+    pub struct User {
+        id: String,
+        name: String,
+    }
+
+
+    #[derive(Serialize, Deserialize)]
+    pub struct CreatePayload {
+    }
     use super::*;
-    pub async fn create<T>(deps: T, payload: CreatePayload) -> Result<(), Error>
+    pub async fn create<T>(deps: &T, payload: &CreatePayload) -> Result<(), Error>
     where
         T: Commit + FetchUser<()>,
     {
