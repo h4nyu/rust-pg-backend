@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "0.2", features = ["full"] }
-warp = "0.2"
+warp = { git = "https://github.com/cjbassi/warp.git", branch = "error"}
 
 mobc = "0.5"
 mobc-postgres = { version = "0.5", features = ["with-chrono-0_4"] }

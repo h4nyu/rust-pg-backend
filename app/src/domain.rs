@@ -14,4 +14,8 @@ pub mod user {
     pub async fn create(payload: CreatePayload) -> Result<(), Error> {
         Ok(())
     }
+
+    pub async fn update(payload: CreatePayload) -> Result<(), Error> {
+        Ok(())
+    }
 }
