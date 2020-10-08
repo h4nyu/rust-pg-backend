@@ -15,4 +15,10 @@ pub enum Error {
     // DBQueryError(#[from] tokio_postgres::Error),
     #[error(transparent)]
     ReadFileError(#[from] std::io::Error),
+
+    #[error("UserAlreadyExists")]
+    UserAlreadyExists,
+
+    #[error("UserNotFound")]
+    UserNotFound,
 }

@@ -1,6 +1,6 @@
 use app::web::serve;
 
-#[tokio::main]
+#[actix_web::main]
 async fn main() {
     serve().await.unwrap();
 }
