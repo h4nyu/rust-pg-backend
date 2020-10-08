@@ -1,11 +1,21 @@
-use crate::database::DBConn;
 use crate::error::Error;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 use uuid::Uuid;
 use chrono::prelude::*;
+use tokio::sync::Mutex;
 
+
+pub struct Lock{
+    user: Mutex<()>
+}
+impl  Default for Lock {
+    fn default() -> Self {
+        Self{
+            user: Mutex::new(())
+        }
+    }
+}
 
 
 #[async_trait]
@@ -14,9 +24,15 @@ pub trait FetchUser<K> {
 }
 
 #[async_trait]
-pub trait Upsert<V> {
-    async fn upsert(&self, row: &V) -> Result<(), Error>;
+pub trait Insert<V> {
+    async fn insert(&self, row: &V) -> Result<(), Error>;
 }
+
+#[async_trait]
+pub trait Update<V> {
+    async fn update(&self, row: &V) -> Result<(), Error>;
+}
+
 
 #[async_trait]
 pub trait Delete<K> {
@@ -56,11 +72,14 @@ pub mod user {
     pub struct CreatePayload {
         pub name: UserName,
     }
-    pub async fn create<T>(store: &T, payload: &CreatePayload) -> Result<UserId, Error>
+    pub async fn create<T>(store: &T, lock:&Lock,payload: &CreatePayload) -> Result<UserId, Error>
     where
-        T: FetchUser<UserName> + Upsert<User>,
+        T: FetchUser<UserName> + Insert<User>,
     {
+        let id = Uuid::new_v4().to_string();
+        let _l = lock.user.lock().await;
         if store.fetch_user(&payload.name).await?.is_some() {
+            println!("unlock{:?}", id);
             Err(Error::UserAlreadyExists)?;
         }
         let new_user = User {
@@ -68,7 +87,7 @@ pub mod user {
             name: payload.name.clone(),
             created_at: Default::default(),
         };
-        store.upsert(&new_user).await?;
+        store.insert(&new_user).await?;
         Ok(new_user.id)
     }
 
@@ -77,10 +96,11 @@ pub mod user {
         pub user_id: UserId,
         pub name: UserName,
     }
-    pub async fn update<T>(store: &T, payload: &UpdatePayload) -> Result<UserId, Error>
+    pub async fn update<T>(store: &T, lock: &Lock, payload: &UpdatePayload) -> Result<UserId, Error>
     where
-        T: FetchUser<UserId> + FetchUser<UserName> + Upsert<User>,
+        T: FetchUser<UserId> + FetchUser<UserName> + Update<User>,
     {
+        let _l = lock.user.lock().await;
         let mut user = store
             .fetch_user(&payload.user_id)
             .await?
@@ -94,7 +114,7 @@ pub mod user {
             None => {}
         }
         user.name = payload.name.clone();
-        store.upsert(&user).await?;
+        store.update(&user).await?;
         Ok(user.id)
     }
 
@@ -102,10 +122,11 @@ pub mod user {
     pub struct DeletePayload {
         pub user_id: UserId,
     }
-    pub async fn delete<T>(store: &T, payload: &DeletePayload) -> Result<(), Error>
+    pub async fn delete<T>(store: &T, lock:&Lock, payload: &DeletePayload) -> Result<(), Error>
     where
         T: FetchUser<UserId> + Delete<UserId>,
     {
+        let _l = lock.user.lock().await;
         store
             .fetch_user(&payload.user_id)
             .await?

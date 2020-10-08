@@ -13,6 +13,7 @@ actix-rt = "1"
 
 uuid = { version = "0.8", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
 
 mobc = "0.5"
 mobc-postgres = { version = "0.5", features = ["with-chrono-0_4"] }

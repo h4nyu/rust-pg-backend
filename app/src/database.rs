@@ -6,7 +6,7 @@ use mobc_postgres::{tokio_postgres, tokio_postgres::NoTls, PgConnectionManager};
 use std::str::FromStr;
 use std::time::Duration;
 use tokio_postgres::Config;
-pub use tokio_postgres::{Row, Transaction};
+pub use tokio_postgres::{Row};
 
 pub fn create_pool() -> Result<DBPool, Error> {
     let config = Config::from_str("postgres://app:app@db")?;
@@ -52,9 +52,18 @@ impl FetchUser<UserId> for DBConn {
 }
 
 #[async_trait]
-impl Upsert<User> for DBConn {
-    async fn upsert(&self, row: &User) -> Result<(), Error> {
-        let stmt = "INSERT INTO users (id, name, created_at) VALUES($1, $2, $3) ON CONFLICT (id) DO UPDATE SET id=$1, name=$2, created_at=$3";
+impl Insert<User> for DBConn {
+    async fn insert(&self, row: &User) -> Result<(), Error> {
+        let stmt = "INSERT INTO users (id, name, created_at) VALUES($1, $2, $3)";
+        self.execute(stmt, &[&row.id.0, &row.name.0, &row.created_at.0]).await?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl Update<User> for DBConn {
+    async fn update(&self, row: &User) -> Result<(), Error> {
+        let stmt = "Update users SET id=$1, name=$2, created_at=$3 WHERE id = $1";
         self.execute(stmt, &[&row.id.0, &row.name.0, &row.created_at.0]).await?;
         Ok(())
     }

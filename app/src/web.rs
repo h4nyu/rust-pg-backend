@@ -1,9 +1,11 @@
-use crate::database::{create_pool, DBPool, Transaction};
+use crate::database::{create_pool, DBPool};
 use crate::domain;
+use crate::domain::{Lock};
 use crate::error::Error;
-use actix_web::{delete, get, post, put, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{delete, post, put, web, App, HttpResponse, HttpServer, Responder};
 use serde::Serialize;
 use std::fmt::Debug;
+use std::sync::Arc;
 
 pub fn to_response<T>(input: Result<T, Error>) -> impl Responder
 where
@@ -20,13 +22,13 @@ pub mod user {
     #[post("/api/v1/user")]
     async fn create(
         pool: web::Data<DBPool>,
+        lock: web::Data<Lock>,
         payload: web::Json<domain::user::CreatePayload>,
     ) -> impl Responder {
         to_response(
             async {
-                let mut conn = pool.get().await?;
-                let res = domain::user::create(&conn, &payload).await;
-                res
+                let conn = pool.get().await?;
+                domain::user::create(&conn, &lock, &payload).await
             }
             .await,
         )
@@ -35,12 +37,13 @@ pub mod user {
     #[put("/api/v1/user")]
     async fn update(
         pool: web::Data<DBPool>,
+        lock: web::Data<Lock>,
         payload: web::Json<domain::user::UpdatePayload>,
     ) -> impl Responder {
         to_response(
             async {
-                let mut conn = pool.get().await?;
-                domain::user::update(&conn, &payload).await
+                let conn = pool.get().await?;
+                domain::user::update(&conn, &lock, &payload).await
             }
             .await,
         )
@@ -49,13 +52,13 @@ pub mod user {
     #[delete("/api/v1/user")]
     async fn delete(
         pool: web::Data<DBPool>,
+        lock: web::Data<Lock>,
         payload: web::Json<domain::user::DeletePayload>,
     ) -> impl Responder {
         to_response(
             async {
-                let mut conn = pool.get().await?;
-                let resp = domain::user::delete(&conn, &payload).await;
-                resp
+                let conn = pool.get().await?;
+                domain::user::delete(&conn, &lock, &payload).await
             }
             .await,
         )
@@ -64,9 +67,11 @@ pub mod user {
 
 pub async fn serve() -> Result<(), Error> {
     let db = create_pool()?;
+    let lock = Arc::new(Lock::default());
     HttpServer::new(move || {
         App::new()
             .data(db.clone())
+            .data(lock.clone())
             .service(user::create)
             .service(user::update)
             .service(user::delete)
