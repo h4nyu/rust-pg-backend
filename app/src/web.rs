@@ -1,6 +1,6 @@
 use crate::database::{create_pool, DBPool};
 use crate::domain;
-use crate::domain::{Lock};
+use crate::domain::Lock;
 use crate::error::Error;
 use actix_web::{delete, post, put, web, App, HttpResponse, HttpServer, Responder};
 use serde::Serialize;

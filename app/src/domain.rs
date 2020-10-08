@@ -1,22 +1,20 @@
 use crate::error::Error;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use chrono::prelude::*;
+use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
+use uuid::Uuid;
 
-
-pub struct Lock{
-    user: Mutex<()>
+pub struct Lock {
+    user: Mutex<()>,
 }
-impl  Default for Lock {
+impl Default for Lock {
     fn default() -> Self {
-        Self{
-            user: Mutex::new(())
+        Self {
+            user: Mutex::new(()),
         }
     }
 }
-
 
 #[async_trait]
 pub trait FetchUser<K> {
@@ -32,7 +30,6 @@ pub trait Insert<V> {
 pub trait Update<V> {
     async fn update(&self, row: &V) -> Result<(), Error>;
 }
-
 
 #[async_trait]
 pub trait Delete<K> {
@@ -72,7 +69,7 @@ pub mod user {
     pub struct CreatePayload {
         pub name: UserName,
     }
-    pub async fn create<T>(store: &T, lock:&Lock,payload: &CreatePayload) -> Result<UserId, Error>
+    pub async fn create<T>(store: &T, lock: &Lock, payload: &CreatePayload) -> Result<UserId, Error>
     where
         T: FetchUser<UserName> + Insert<User>,
     {
@@ -122,7 +119,7 @@ pub mod user {
     pub struct DeletePayload {
         pub user_id: UserId,
     }
-    pub async fn delete<T>(store: &T, lock:&Lock, payload: &DeletePayload) -> Result<(), Error>
+    pub async fn delete<T>(store: &T, lock: &Lock, payload: &DeletePayload) -> Result<(), Error>
     where
         T: FetchUser<UserId> + Delete<UserId>,
     {
@@ -145,7 +142,7 @@ pub mod tests {
 
     #[async_trait]
     impl FetchUser<UserId> for MemStore {
-        async fn fetch_user(&self, key: &UserId) -> Result<Option<User>, Error>{
+        async fn fetch_user(&self, key: &UserId) -> Result<Option<User>, Error> {
             let res = self.uses.iter().find(|x| &x.id == key).map(|x| x.clone());
             Ok(res)
         }
