@@ -7,11 +7,13 @@ use uuid::Uuid;
 
 pub struct Lock {
     user: Mutex<()>,
+    group: Mutex<()>,
 }
 impl Default for Lock {
     fn default() -> Self {
         Self {
             user: Mutex::new(()),
+            group: Mutex::new(()),
         }
     }
 }
@@ -73,9 +75,9 @@ pub mod user {
     where
         T: FetchUser<UserName> + Insert<User>,
     {
-        let _l = lock.user.lock().await;
+        let id = Uuid::new_v4().to_string();
+        let (_u, _g) = (lock.user.lock().await, lock.group.lock().await);
         if store.fetch_user(&payload.name).await?.is_some() {
-            println!("unlock{:?}", id);
             Err(Error::UserAlreadyExists)?;
         }
         let new_user = User {
