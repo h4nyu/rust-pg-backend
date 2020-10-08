@@ -30,7 +30,7 @@ fn to_user(row: Row) -> User {
 }
 
 #[async_trait]
-impl<'a> FetchUser<UserName> for DBConn {
+impl FetchUser<UserName> for DBConn {
     async fn fetch_user(&self, key: &UserName) -> Result<Option<User>, Error> {
         let res = self
             .query_opt("SELECT * FROM users where name = $1", &[&key.0])
@@ -41,7 +41,7 @@ impl<'a> FetchUser<UserName> for DBConn {
 }
 
 #[async_trait]
-impl<'a> FetchUser<UserId> for DBConn {
+impl FetchUser<UserId> for DBConn {
     async fn fetch_user(&self, key: &UserId) -> Result<Option<User>, Error> {
         let res = self
             .query_opt("SELECT * FROM users where id = $1", &[&key.0])
@@ -52,7 +52,7 @@ impl<'a> FetchUser<UserId> for DBConn {
 }
 
 #[async_trait]
-impl<'a> Upsert<User> for DBConn {
+impl Upsert<User> for DBConn {
     async fn upsert(&self, row: &User) -> Result<(), Error> {
         let stmt = "INSERT INTO users (id, name, created_at) VALUES($1, $2, $3) ON CONFLICT (id) DO UPDATE SET id=$1, name=$2, created_at=$3";
         self.execute(stmt, &[&row.id.0, &row.name.0, &row.created_at.0]).await?;
@@ -61,7 +61,7 @@ impl<'a> Upsert<User> for DBConn {
 }
 
 #[async_trait]
-impl<'a> Delete<UserId> for DBConn {
+impl Delete<UserId> for DBConn {
     async fn delete(&self, key: &UserId) -> Result<(), Error> {
         let stmt = "DELETE FROM users where id = $1";
         self.execute(stmt, &[&key.0]).await?;
