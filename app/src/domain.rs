@@ -73,7 +73,6 @@ pub mod user {
     where
         T: FetchUser<UserName> + Insert<User>,
     {
-        let id = Uuid::new_v4().to_string();
         let _l = lock.user.lock().await;
         if store.fetch_user(&payload.name).await?.is_some() {
             println!("unlock{:?}", id);
