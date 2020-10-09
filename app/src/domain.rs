@@ -5,18 +5,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-pub struct Lock {
-    user: Mutex<()>,
-    group: Mutex<()>,
-}
-impl Default for Lock {
-    fn default() -> Self {
-        Self {
-            user: Mutex::new(()),
-            group: Mutex::new(()),
-        }
-    }
-}
+pub type Lock = Mutex<()>;
 
 #[async_trait]
 pub trait FetchUser<K> {
@@ -76,7 +65,7 @@ pub mod user {
         T: FetchUser<UserName> + Insert<User>,
     {
         let id = Uuid::new_v4().to_string();
-        let (_u, _g) = (lock.user.lock().await, lock.group.lock().await);
+        let _l = lock.lock().await;
         if store.fetch_user(&payload.name).await?.is_some() {
             Err(Error::UserAlreadyExists)?;
         }
@@ -98,7 +87,7 @@ pub mod user {
     where
         T: FetchUser<UserId> + FetchUser<UserName> + Update<User>,
     {
-        let _l = lock.user.lock().await;
+        let _l = lock.lock().await;
         let mut user = store
             .fetch_user(&payload.user_id)
             .await?
@@ -124,7 +113,7 @@ pub mod user {
     where
         T: FetchUser<UserId> + Delete<UserId>,
     {
-        let _l = lock.user.lock().await;
+        let _l = lock.lock().await;
         store
             .fetch_user(&payload.user_id)
             .await?

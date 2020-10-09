@@ -6,6 +6,7 @@ use actix_web::{delete, post, put, web, App, HttpResponse, HttpServer, Responder
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub fn to_response<T>(input: Result<T, Error>) -> impl Responder
 where
@@ -67,7 +68,7 @@ pub mod user {
 
 pub async fn serve() -> Result<(), Error> {
     let db = create_pool()?;
-    let lock = Arc::new(Lock::default());
+    let lock = Arc::new(Mutex::new(()));
     HttpServer::new(move || {
         App::new()
             .data(db.clone())
