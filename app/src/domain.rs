@@ -3,9 +3,10 @@ use async_trait::async_trait;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
+use std::sync::Arc;
 use uuid::Uuid;
 
-pub type Lock = Mutex<()>;
+pub type Lock = Arc<Mutex<()>>;
 
 #[async_trait]
 pub trait FetchUser<K> {
@@ -64,7 +65,6 @@ pub mod user {
     where
         T: FetchUser<UserName> + Insert<User>,
     {
-        let id = Uuid::new_v4().to_string();
         let _l = lock.lock().await;
         if store.fetch_user(&payload.name).await?.is_some() {
             Err(Error::UserAlreadyExists)?;
